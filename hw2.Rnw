@@ -1,0 +1,55 @@
+\documentclass{article}
+
+\usepackage[margin=0.25in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\rhead{Andrea Mack}
+\chead{STAT 537 Homework 1}
+\lhead{01/19/2016}
+
+
+\setlength{\headheight}{20pt}
+
+\renewcommand{\headrulewidth}{1pt}
+
+\renewcommand{\footrulewidth}{0.2pt}
+
+\begin{document}
+
+<<data, include = FALSE>>=
+setwd("C:/Users/Andrea Mack/OneDrive/Spring2016Courses/Stat537/Homework/HW2")
+load("easy_winresults_sp535_fg100.RData")
+results
+
+air<-read.table(file = "http://people.stern.nyu.edu/wgreene/Text/tables/TableF7-1.txt", header = TRUE)
+str(air)
+air$T <- as.factor(air$T)
+air$I <- as.factor(air$I)
+
+install.packages("MuMIn")
+library("MuMIn")
+
+options(na.action ="na.fail") #can't be na.exclude bc then models fit with different observations
+
+# I = airline
+# T = year
+# Q = Output 
+# C = total cost
+# PF = fuel price
+# LF = load factor
+
+air.full <- lm(C ~ Q + PF + LF, data = air)
+air.d <- dredge(air.full, rank = AIC)
+get.models(air.d)
+
+
+
+
+
+
+
+@
+
+
+\end{document}
