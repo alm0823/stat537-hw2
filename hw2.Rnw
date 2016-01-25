@@ -36,7 +36,7 @@ options(na.action ="na.fail") #can't be na.exclude bc then models fit with diffe
 
 # I = airline
 # T = year
-# Q = Output 
+# Q = Output
 # C = total cost
 # PF = fuel price
 # LF = load factor
@@ -57,9 +57,9 @@ summary(air.full)
 
 \item There is strong support that the full model, with all three predictors explains the variation in the data better than any other model with fewer predictors because the all other models have AICs more than 2 units larger than the full model.
 
-\item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $\< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaning the variation in the data than a model without any predictors. 
+\item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $\< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaning the variation in the data than a model without any predictors.
 
-\item 
+\item
 
 
 
