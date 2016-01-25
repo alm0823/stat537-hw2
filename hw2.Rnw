@@ -4,9 +4,9 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 
-\rhead{Andrea Mack}
-\chead{STAT 537 Homework 1}
-\lhead{01/19/2016}
+\rhead{Andrea Mack and Kenny Flagg}
+\chead{STAT 537 Homework 2}
+\lhead{01/27/2016}
 
 
 \setlength{\headheight}{20pt}
@@ -16,8 +16,10 @@
 \renewcommand{\footrulewidth}{0.2pt}
 
 \begin{document}
+\begin{enumerate}
+\item
 
-<<data, include = FALSE>>=
+<<data, echo=FALSE, cahce=FALSE>>=
 setwd("C:/Users/Andrea Mack/OneDrive/Spring2016Courses/Stat537/Homework/HW2")
 load("easy_winresults_sp535_fg100.RData")
 results
@@ -27,7 +29,7 @@ str(air)
 air$T <- as.factor(air$T)
 air$I <- as.factor(air$I)
 
-install.packages("MuMIn")
+#install.packages("MuMIn")
 library("MuMIn")
 
 options(na.action ="na.fail") #can't be na.exclude bc then models fit with different observations
@@ -41,7 +43,9 @@ options(na.action ="na.fail") #can't be na.exclude bc then models fit with diffe
 
 air.full <- lm(C ~ Q + PF + LF, data = air)
 air.d <- dredge(air.full, rank = AIC)
-get.models(air.d)
+get.models(air.d, subset = TRUE)
+
+summary(air.full)
 
 
 
@@ -51,5 +55,15 @@ get.models(air.d)
 
 @
 
+\item There is strong support that the full model, with all three predictors explains the variation in the data better than any other model with fewer predictors because the all other models have AICs more than 2 units larger than the full model.
 
+\item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $\< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaning the variation in the data than a model without any predictors. 
+
+\item 
+
+
+
+
+
+\end{enumerate}
 \end{document}
