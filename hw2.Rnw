@@ -63,6 +63,19 @@ for(j in 1:n){
   CVn_j[j] <- (air$C[j] - mean(air$C[-j]))^2
 }
 CVn <- mean(CVn_j)
+
+#Let's discuss this one tomorrow.
+
+#air.inf <- influence(air.full) #calculates influence air.inf$hat[j]
+##air.pred <- predict(air.full)
+#for(j in 1:n){
+  # Compare jth observation with mean omitting jth observation
+  #CVn_j[j] <- (((air$C[j] - air.pred[j]))/(1 - air.inf$hat[j]))^2 # Looking at the formula, this
+#}
+#CVn <- 1/n + sum(CVn_j)
+
+CVn
+
 @
 
 \item There is strong support that the full model, with all three predictors explains the variation in the data better than any other model with fewer predictors because the all other models have AICs more than 2 units larger than the full model.
