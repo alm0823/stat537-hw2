@@ -20,9 +20,9 @@
 \item
 
 <<data, echo=FALSE, cahce=FALSE>>=
-setwd("C:/Users/Andrea Mack/OneDrive/Spring2016Courses/Stat537/Homework/HW2")
-load("easy_winresults_sp535_fg100.RData")
-results
+#setwd("C:/Users/Andrea Mack/OneDrive/Spring2016Courses/Stat537/Homework/HW2")
+#load("easy_winresults_sp535_fg100.RData")
+#results
 
 air<-read.table(file = "http://people.stern.nyu.edu/wgreene/Text/tables/TableF7-1.txt", header = TRUE)
 str(air)
@@ -67,7 +67,7 @@ CVn <- mean(CVn_j)
 
 \item There is strong support that the full model, with all three predictors explains the variation in the data better than any other model with fewer predictors because the all other models have AICs more than 2 units larger than the full model.
 
-\item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $\< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaning the variation in the data than a model without any predictors.
+\item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaning the variation in the data than a model without any predictors.
 
 \item
 
