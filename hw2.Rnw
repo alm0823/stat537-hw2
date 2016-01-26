@@ -118,6 +118,15 @@ CVn.ranklow_lev <- 1/n + sum(CVn.ranklow_i)
 c(CVn.rank1_lev, CVn.rank2_lev, CVn.rank2_lev)
 
 
+########### CHECK ##############
+install.packages("cvTools")
+library(cvTools)
+
+folds <- cvFolds(n=n, K=n, R=1) #cvFolds object
+
+cvLm(air.full)
+cvLm(air2.lm)
+cvLm(airlow.lm)
 
 @
 
