@@ -15,23 +15,43 @@
 
 \renewcommand{\footrulewidth}{0.2pt}
 
-\begin{document}
-\begin{enumerate}
-\item AICs through dredge function
 
-<<data, echo=FALSE, cahce=FALSE, comment=NA, results='asis', warning=FALSE>>=
+<<setup, include=FALSE, message=FALSE, warning=FALSE, cache=FALSE>>=
+# I use this chunk to load libraries and set options
+
+# Load knitr and set default options for all code chunks
+library(knitr)
+opts_chunk$set(cache = FALSE, comment = NA, echo = FALSE)
+#cache doesn't rerun code chunk unless something is changed when cache=TRUE
+
+library(xtable)
+library(MuMIn)
+library(cvTools)
+
+options(na.action = "na.fail", scipen = -1, xtable.floating = FALSE)
+#na.action can't be na.exclude bc then models fit with different observations
+#scipen sets some sort of penalty that R uses to decide when it uses scientific notation
+#xtable.floating = FALSE makes it not produce a floating table, which is hard to position
+
 #setwd("C:/Users/Andrea Mack/OneDrive/Spring2016Courses/Stat537/Homework/HW2")
 #load("easy_winresults_sp535_fg100.RData")
 #results
+@
 
-air<-read.table(file = "http://people.stern.nyu.edu/wgreene/Text/tables/TableF7-1.txt", header = TRUE)
+
+\begin{document}
+\begin{enumerate}
+\setlength{\itemsep}{10pt} % More space between items
+
+\item AICs through dredge function:
+
+% I like xtables to be centered
+\begin{center}
+<<data, results='asis', message=FALSE, warning=FALSE>>=
+air<-read.table(file = "http://people.stern.nyu.edu/wgreene/Text/tables/TableF7-1.txt",
+                header = TRUE)
 air$T <- as.factor(air$T)
 air$I <- as.factor(air$I)
-
-#install.packages("MuMIn")
-library("MuMIn")
-
-options(na.action ="na.fail") #can't be na.exclude bc then models fit with different observations
 
 # I = airline
 # T = year
@@ -43,40 +63,45 @@ options(na.action ="na.fail") #can't be na.exclude bc then models fit with diffe
 air.full <- lm(C ~ Q + PF + LF, data = air)
 air.d <- dredge(air.full, rank = AIC)
 #get.models(air.d, subset = TRUE)
+xtable(air.d)
+@
+\end{center}
 
-#summary(air.full)
-library(xtable)
-print(xtable(air.d))
+\item The full model, with all three predictors, has an AIC that is 16.3 units lower than the AIC of second-ranked model, which has fuel price and output as predictors. There is strong support that the full model explains the variation in the data better than any other model with fewer predictors because the all other models have AICs more than 2 units larger than the full model.
 
+\item Sumary of the full model:
 
-
-
-
-
+<<summary>>=
+# xtable doesn't include the F-test and other stuff at the bottom
+summary(air.full)
 @
 
-\item There is strong support that the full model, with all three predictors explains the variation in the data better than any other model with fewer predictors because the all other models have AICs more than 2 units larger than the full model.
+The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on the statistic $F_{3,86} = 503.1$ with pvalue $< 1/1000$, there is strong evidence that the full model does better in explaining the variation in the data than a model without any predictors.
 
-\item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaining the variation in the data than a model without any predictors.
+% It wants to start a new page between the CVn line and the output so I put the whole item on the next page.
+\pagebreak
 
-\item R code and $CV_{(n)}$ estimation
+\item R code and $CV_{(n)}$ estimation:
 
-<<kennys, comment=NA>>=
+<<cvn, echo=TRUE>>=
 n <- 90
 CVn_j <- numeric(0)
 for(j in 1:n){
   # Compare jth observation with mean omitting jth observation
-  CVn_j[j] <- (air$C[j] - mean(air$C[-j]))^2 #intercept only model, prediction for all X is mean(air$C)
+  # intercept only model, prediction for all X is mean(air$C)
+  CVn_j[j] <- (air$C[j] - mean(air$C[-j]))^2
 }
 CVn <- mean(CVn_j)
 
 CVn
-
 @
 
-\item Calculating LOOCV using leverage.
+\item Calculating LOOCV using leverage (code is in the appendix):
 
-<<cvn.lev, echo=FALSE, cache=FALSE>>=
+<<cvn.lev.old, eval=FALSE>>=
+# I'm keeping this code chunk so we can see the comments and stuff.
+# There is a cleaned-up version right below.
+
 #CVn.rank1_i <- numeric (0)
 
 #for(i in n){
@@ -116,6 +141,39 @@ CVn <- c(CVn.rank1_lev, CVn.rank2_lev, CVn.ranklow_lev)
 CVn
 @
 
+\begin{center}
+<<cvn.lev, results='asis'>>=
+air.inf <- influence(air.full)
+air.pred <- predict(air.full)
+
+CVn.rank1_i <- ((air$C - air.pred)/(1 - air.inf$hat))^2
+CVn.rank1_lev <- 1/n * sum(CVn.rank1_i)
+
+# get.models returns a list of lm objects, ordered from best to worst
+# Get the second and last entries
+air2.lm <- get.models(air.d, subset = TRUE)[[2]]
+airlow.lm <- get.models(air.d, subset = TRUE)[[8]]
+
+air2.inf <- influence(air2.lm)
+air2.pred <- predict(air2.lm)
+
+CVn.rank2_i <- ((air$C - air2.pred)/(1 - air2.inf$hat))^2
+CVn.rank2_lev <- 1/n * sum(CVn.rank2_i)
+
+airlow.inf <- influence(airlow.lm)
+airlow.pred <- predict(airlow.lm)
+
+CVn.ranklow_i <- ((air$C - airlow.pred)/(1 - airlow.inf$hat))^2
+CVn.ranklow_lev <- 1/n * sum(CVn.ranklow_i)
+
+CVn <- cbind("Full Model" = CVn.rank1_lev,
+             "2nd Ranked Model" = CVn.rank2_lev,
+             "Intercept Only Model" = CVn.ranklow_lev)
+rownames(CVn) <- "LOOCV"
+xtable(CVn)
+@
+\end{center}
+
 The top ranked model based on AIC also had the lowest mean-squared prediction error ($MSE = 8.516 \times 10^{10}$) , the second ranked model based on AIC had the second lowest mean-squared prediction error ($MSE = 1.017 \times 10^{11}$), and the lowest ranked model based on AIC had the largest mean-squared prediction error ($MSE = 1.437 \times 10^{12}$).
 
 The calculations with this formula for $CV_{(n)}$ agree with our conclusion from calculating AIC. The full model has the lowest mean-squared prediction error and had the lowest AIC, the model with price of fuel and output as predictors has the second lowest mean-squared prediction error and had the second lowest AIC, and the intercept only model has the highest mean-squared prediction error, which also had the highest AIC.
@@ -136,10 +194,10 @@ cvLm(lm(C ~ 1, data = air), folds = folds.loocv)$cv
 CVn
 @
 
-\item 5-fold CV using cvFolds
+\item 5-fold CV using cvFolds:
 
-<<cvfolds, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE>>=
-library(cvTools)
+\begin{center}
+<<cvfolds, message=FALSE, warning=FALSE, results='asis'>>=
 set.seed(123)
 folds.5fold <- cvFolds(n=n, K=5, R=1) #cvFolds object for 5-fold CV
 
@@ -148,21 +206,18 @@ cvLm.2 <- cvLm(air2.lm, cost = mspe, folds = folds.5fold)$cv
 cv.Lm.low <- cvLm(airlow.lm, cost = mspe, folds = folds.5fold)$cv
 
 CV5 <- c(cvLm.full, cvLm.2, cv.Lm.low)
-@
-
-<<cvtable, echo=FALSE, results="asis", comment=NA, message=FALSE, warning=FALSE>>=
-library(xtable)
 
 CV.table <- rbind("LOOCV" = CVn, "5-fold" = CV5)
 colnames(CV.table) <- c("Full model", " 2nd Ranked Model", "Intercept Only Model")
-print(xtable(CV.table), floating = FALSE)
-
-#cache doesn't rerun code chunk unless something is changed when cache=TRUE
+xtable(CV.table)
 @
+\end{center}
+
 5-fold cross validation yielded smaller mean-squared prediction errors for full and intercept models than LOOCV, but larger mean-squared prediction errors for the 2nd ranked model using 5-fold cross validation than LOOCV. However, the relative size of the mean-squared prediction errors between the three models stayed the same for 5-fold cross validation as with LOOCV.
 
-\item Changing seed and re-running 5-fold CV estimations.
+\item Changing seed and re-running 5-fold CV estimations:
 
+\begin{center}
 <<last, echo=FALSE, results="asis", comment=NA, message=FALSE, warning=FALSE>>=
 set.seed(987)
 folds.5fold1 <- cvFolds(n=n, K=5, R=1) #cvFolds object for 5-fold CV
@@ -173,19 +228,48 @@ cv.Lm.low1 <- cvLm(airlow.lm, cost = mspe, folds = folds.5fold1)$cv
 
 CV51 <- c(cvLm.full1, cvLm.21, cv.Lm.low1)
 
-library(xtable)
-
 CV.table <- rbind("LOOCV" = CVn, "5-fold: seed=123"=CV5, "5-fold: seed=987" = CV51)
 colnames(CV.table) <- c("Full model", " 2nd Ranked Model", "Intercept Only Model")
-print(xtable(CV.table), floating = FALSE)
-
-#cache doesn't rerun code chunk unless something is changed when cache=TRUE
-
-
-
+xtable(CV.table)
 @
+\end{center}
 
 When the seed is changed, different mean-squared prediction errors arise using the 5-fold CV method. The estimated error changes because the 5 groups the data were randomly divided into changes, which will change the OLS line, and therefore the mean-squared prediction errors are different. LOOCV will not change if the seed is set because in each MSE calculation, we are only leaving out one observation, and addition is commutative.
 
 \end{enumerate}
+
+\pagebreak
+\begin{center}\textbf{\large R Code Appendix}\end{center}
+
+\begin{enumerate}
+
+\item
+<<data, echo=TRUE, eval=FALSE>>=
+@
+
+% Manually set the item counter to 2 so that the next \item will be #3
+\setcounter{enumi}{2}
+
+\item
+<<summary, echo=TRUE, eval=FALSE>>=
+@
+
+\item
+<<cvn, echo=TRUE, eval=FALSE>>=
+@
+
+\item
+<<cvn.lev, echo=TRUE, eval=FALSE>>=
+@
+
+\item
+<<cvfolds, echo=TRUE, eval=FALSE>>=
+@
+
+\item
+<<last, echo=TRUE, eval=FALSE>>=
+@
+
+\end{enumerate}
+
 \end{document}
