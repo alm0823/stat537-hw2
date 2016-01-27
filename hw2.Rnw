@@ -72,82 +72,122 @@ CVn
 
 \item There is strong support that the full model, with all three predictors explains the variation in the data better than any other model with fewer predictors because the all other models have AICs more than 2 units larger than the full model.
 
-\item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaning the variation in the data than a model without any predictors.
+\item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaining the variation in the data than a model without any predictors.
 
 \item text four
 
-\item Calculating $CV_(n)$ using leverage.
+\item Calculating LOOCV using leverage.
 
 <<cvn.lev, echo=FALSE, cache=FALSE>>=
-CVn.rank1_i <- numeric (0)
+#CVn.rank1_i <- numeric (0)
 
-for(i in n){
+#for(i in n){
 air.inf <- influence(air.full) #calculates influence air.inf$hat[j]
 air.pred <- predict(air.full)
 
-CVn.rank1_i[i] <- (((air$C[i] - air.pred[i]))/(1 - air.inf$hat[i]))^2
-}
+CVn.rank1_i <- (((air$C - air.pred))/(1 - air.inf$hat))^2
+#}
 
 
-CVn.rank1_lev <- 1/n + sum(CVn_i)
+CVn.rank1_lev <- 1/n * sum(CVn.rank1_i)
 
 
-air2.lm <- lm(C ~ , data = air) #come back and fill in when dredge works
-airlow.lm <- lm(C ~ , data = air)
+#air2.lm <- lm(C ~ , data = air) #come back and fill in when dredge works
+#airlow.lm <- lm(C ~ , data = air)
 
 # get.models returns a list of lm objects, ordered from best to worst
 air2.lm <- get.models(air.d, subset = TRUE)[[2]]
 airlow.lm <- get.models(air.d, subset = TRUE)[[8]]
 
 
-CVn.rank2_i <- numeric(0)
-for(i in n){
 air2.inf <- influence(air2.lm) #calculates influence air.inf$hat[j]
 air2.pred <- predict(air2.lm)
 
-CVn.rank2_i[i] <- (((air$C[i] - air2.pred[i]))/(1 - air2.inf$hat[i]))^2
+CVn.rank2_i <- (((air$C - air2.pred))/(1 - air2.inf$hat))^2
+CVn.rank2_lev <- 1/n * sum(CVn.rank2_i)
 
-}
-CVn.rank2_lev <- 1/n + sum(CVn.rank2_i)
-
-CVn.ranklow_i <- numeric(0)
-for(i in n){
 airlow.inf <- influence(airlow.lm) #calculates influence air.inf$hat[j]
 airlow.pred <- predict(airlow.lm)
 
-CVn.ranklow_i[i] <- (((air$C[i] - airlow.pred[i]))/(1 - airlow.inf$hat[i]))^2
+CVn.ranklow_i <- (((air$C - airlow.pred))/(1 - airlow.inf$hat))^2
+CVn.ranklow_lev <- 1/n * sum(CVn.ranklow_i)
 
-}
-CVn.ranklow_lev <- 1/n + sum(CVn.ranklow_i)
+options('scipen'=-1)
 
-c(CVn.rank1_lev, CVn.rank2_lev, CVn.rank2_lev)
+CVn <- c(CVn.rank1_lev, CVn.rank2_lev, CVn.ranklow_lev)
+CVn
+@
 
+The top ranked model based on AIC also had the lowest mean-squared prediction error ($MSE = 8.516 \times 10^{10}$) , the second ranked model based on AIC had the second lowest mean-squared prediction error ($MSE = 1.017 \times 10^{11}$), and the lowest ranked model based on AIC had the largest mean-squared prediction error ($MSE = 1.437 \times 10^{12}$).
 
-########### CHECK ##############
+The calculations with this formula for $CV_{(n)}$ agree with our conclusion from calculating AIC. The full model has the lowest mean-squared prediction error and had the lowest AIC, the model with price of fuel and output as predictors has the second lowest mean-squared prediction error and had the second lowest AIC, and the intercept only model has the highest mean-squared prediction error, which also had the highest AIC.
+
+<<next, include=FALSE, eval=FALSE, message=FALSE, warning=FALSE>>=
 #install.packages("cvTools")
-library(cvTools)
 
-folds.loocv <- cvFolds(n=n, K=n, R=1) #cvFolds object for LOOCV
+library(cvTools)
+folds.loocv <- cvFolds(n=n, K=n, R=1) #cvFolds object for LOOCV used to check previous problem
 
 # cvLM computes sqrt(CVn), so we need to square its output
-cvLm(air.full, folds = folds.loocv)$cv^2
-cvLm(air2.lm, folds = folds.loocv)$cv^2
-cvLm(airlow.lm, folds = folds.loocv)$cv^2
+cvLm(air.full, folds = folds.loocv)$cv
+cvLm(air2.lm, folds = folds.loocv)$cv
+cvLm(airlow.lm, folds = folds.loocv)$cv
 
 # Checking that this agrees with #4
-cvLm(lm(C ~ 1, data = air), folds = folds)$cv^2
+cvLm(lm(C ~ 1, data = air), folds = folds.loocv)$cv
 CVn
 @
 
 \item 5-fold CV using cvFolds
 
-<<cvfolds, echo=FALSE, cache=FALSE>>=
+<<cvfolds, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE>>=
+library(cvTools)
+set.seed(123)
 folds.5fold <- cvFolds(n=n, K=5, R=1) #cvFolds object for 5-fold CV
 
-cvLm(air.full, folds = folds.5fold)$cv^2
-cvLm(air2.lm, folds = folds.5fold)$cv^2
-cvLm(airlow.lm, folds = folds.5fold)$cv^2
+cvLm.full <- cvLm(air.full, cost = mspe, folds = folds.5fold)$cv
+cvLm.2 <- cvLm(air2.lm, cost = mspe, folds = folds.5fold)$cv
+cv.Lm.low <- cvLm(airlow.lm, cost = mspe, folds = folds.5fold)$cv
+
+CV5 <- c(cvLm.full, cvLm.2, cv.Lm.low)
 @
+
+<<cvtable, echo=FALSE, results="asis", comment=NA, message=FALSE, warning=FALSE>>=
+library(xtable)
+
+CV.table <- rbind("LOOCV" = CVn, "5-fold" = CV5)
+colnames(CV.table) <- c("Full model", " 2nd Ranked Model", "Intercept Only Model")
+print(xtable(CV.table), floating = FALSE)
+
+#cache doesn't rerun code chunk unless something is changed when cache=TRUE
+@
+5-fold cross validation yielded smaller mean-squared prediction errors for full and intercept models than LOOCV, but larger mean-squared prediction errors for the 2nd ranked model using 5-fold cross validation than LOOCV. However, the relative size of the mean-squared prediction errors between the three models stayed the same for 5-fold cross validation as with LOOCV.
+
+\item Changing seed and re-running 5-fold CV estimations.
+
+<<last, echo=FALSE, results="asis", comment=NA, message=FALSE, warning=FALSE>>=
+set.seed(987)
+folds.5fold1 <- cvFolds(n=n, K=5, R=1) #cvFolds object for 5-fold CV
+
+cvLm.full1 <- cvLm(air.full, cost = mspe, folds = folds.5fold1)$cv
+cvLm.21 <- cvLm(air2.lm, cost = mspe, folds = folds.5fold1)$cv
+cv.Lm.low1 <- cvLm(airlow.lm, cost = mspe, folds = folds.5fold1)$cv
+
+CV51 <- c(cvLm.full1, cvLm.21, cv.Lm.low1)
+
+library(xtable)
+
+CV.table <- rbind("LOOCV" = CVn, "5-fold: seed=123"=CV5, "5-fold: seed=987" = CV51)
+colnames(CV.table) <- c("Full model", " 2nd Ranked Model", "Intercept Only Model")
+print(xtable(CV.table), floating = FALSE)
+
+#cache doesn't rerun code chunk unless something is changed when cache=TRUE
+
+
+
+@
+
+When the seed is changed, different mean-squared prediction errors arise using the 5-fold CV method. The estimated error changes because the 5 groups the data were randomly divided into changes, which will change the OLS line, and therefore the mean-squared prediction errors are different. LOOCV will not change if the seed is set because in each MSE calculation, we are only leaving out one observation, and addition is commutative.
 
 \end{enumerate}
 \end{document}
