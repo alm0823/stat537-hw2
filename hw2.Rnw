@@ -1,6 +1,6 @@
 \documentclass{article}
 
-\usepackage[margin=0.25in]{geometry}
+\usepackage[margin=1in]{geometry}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 
@@ -11,7 +11,7 @@
 
 \setlength{\headheight}{20pt}
 
-\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\headrulewidth}{0.2pt}
 
 \renewcommand{\footrulewidth}{0.2pt}
 
