@@ -101,7 +101,7 @@ air2.inf <- influence(air2.lm) #calculates influence air.inf$hat[j]
 air2.pred <- predict(air2.lm)
 
 CVn.rank2_i[i] <- (((air$C[i] - air2.pred[i]))/(1 - air2.inf$hat[i]))^2
-  
+
 }
 CVn.rank2_lev <- 1/n + sum(CVn.rank2_i)
 
@@ -111,7 +111,7 @@ airlow.inf <- influence(airlow.lm) #calculates influence air.inf$hat[j]
 airlow.pred <- predict(airlow.lm)
 
 CVn.ranklow_i[i] <- (((air$C[i] - airlow.pred[i]))/(1 - airlow.inf$hat[i]))^2
-  
+
 }
 CVn.ranklow_lev <- 1/n + sum(CVn.ranklow_i)
 
@@ -119,7 +119,7 @@ c(CVn.rank1_lev, CVn.rank2_lev, CVn.rank2_lev)
 
 
 ########### CHECK ##############
-install.packages("cvTools")
+#install.packages("cvTools")
 library(cvTools)
 
 folds <- cvFolds(n=n, K=n, R=1) #cvFolds object
@@ -128,6 +128,9 @@ cvLm(air.full)
 cvLm(air2.lm)
 cvLm(airlow.lm)
 
+# Checking that this agrees with #4
+cvLm(lm(C ~ 1, data = air), folds = folds)$cv^2
+CVn
 @
 
 
