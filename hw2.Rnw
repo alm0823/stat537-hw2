@@ -95,6 +95,11 @@ CVn.rank1_lev <- 1/n + sum(CVn_i)
 air2.lm <- lm(C ~ , data = air) #come back and fill in when dredge works
 airlow.lm <- lm(C ~ , data = air)
 
+# get.models returns a list of lm objects, ordered from best to worst
+air2.lm <- get.models(air.d, subset = TRUE)[[2]]
+airlow.lm <- get.models(air.d, subset = TRUE)[[8]]
+
+
 CVn.rank2_i <- numeric(0)
 for(i in n){
 air2.inf <- influence(air2.lm) #calculates influence air.inf$hat[j]
@@ -122,20 +127,27 @@ c(CVn.rank1_lev, CVn.rank2_lev, CVn.rank2_lev)
 #install.packages("cvTools")
 library(cvTools)
 
-folds <- cvFolds(n=n, K=n, R=1) #cvFolds object
+folds.loocv <- cvFolds(n=n, K=n, R=1) #cvFolds object for LOOCV
 
-cvLm(air.full)
-cvLm(air2.lm)
-cvLm(airlow.lm)
+# cvLM computes sqrt(CVn), so we need to square its output
+cvLm(air.full, folds = folds.loocv)$cv^2
+cvLm(air2.lm, folds = folds.loocv)$cv^2
+cvLm(airlow.lm, folds = folds.loocv)$cv^2
 
 # Checking that this agrees with #4
 cvLm(lm(C ~ 1, data = air), folds = folds)$cv^2
 CVn
 @
 
+\item 5-fold CV using cvFolds
 
+<<cvfolds, echo=FALSE, cache=FALSE>>=
+folds.5fold <- cvFolds(n=n, K=5, R=1) #cvFolds object for 5-fold CV
 
-
+cvLm(air.full, folds = folds.5fold)$cv^2
+cvLm(air2.lm, folds = folds.5fold)$cv^2
+cvLm(airlow.lm, folds = folds.5fold)$cv^2
+@
 
 \end{enumerate}
 \end{document}
