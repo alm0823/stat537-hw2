@@ -17,15 +17,14 @@
 
 \begin{document}
 \begin{enumerate}
-\item
+\item AICs through dredge function
 
-<<data, echo=FALSE, cahce=FALSE>>=
+<<data, echo=FALSE, cahce=FALSE, comment=NA, results='asis', warning=FALSE>>=
 #setwd("C:/Users/Andrea Mack/OneDrive/Spring2016Courses/Stat537/Homework/HW2")
 #load("easy_winresults_sp535_fg100.RData")
 #results
 
 air<-read.table(file = "http://people.stern.nyu.edu/wgreene/Text/tables/TableF7-1.txt", header = TRUE)
-str(air)
 air$T <- as.factor(air$T)
 air$I <- as.factor(air$I)
 
@@ -43,30 +42,16 @@ options(na.action ="na.fail") #can't be na.exclude bc then models fit with diffe
 
 air.full <- lm(C ~ Q + PF + LF, data = air)
 air.d <- dredge(air.full, rank = AIC)
-get.models(air.d, subset = TRUE)
+#get.models(air.d, subset = TRUE)
 
-summary(air.full)
-
-
-
-
+#summary(air.full)
+library(xtable)
+print(xtable(air.d))
 
 
 
-@
 
-<<kennys, include=FALSE>>=
-n <- 90
-CVn_j <- numeric(0)
-for(j in 1:n){
-  # Compare jth observation with mean omitting jth observation
-  CVn_j[j] <- (air$C[j] - mean(air$C[-j]))^2
-}
-CVn <- mean(CVn_j)
 
-#Let's discuss this one tomorrow.
-
-CVn
 
 @
 
@@ -74,7 +59,20 @@ CVn
 
 \item The AIC method for comparing the fullest model to the most reduced model yields the same result as the regression output for this comparison. The model with no predictors has an AIC 256.85 units larger than the full model. Based on a pvalue that is $< 1/1000$ ($F_{3,86} = 503.1$), there is strong evidence that the full model does better in explaining the variation in the data than a model without any predictors.
 
-\item text four
+\item R code and $CV_{(n)}$ estimation
+
+<<kennys, comment=NA>>=
+n <- 90
+CVn_j <- numeric(0)
+for(j in 1:n){
+  # Compare jth observation with mean omitting jth observation
+  CVn_j[j] <- (air$C[j] - mean(air$C[-j]))^2 #intercept only model, prediction for all X is mean(air$C)
+}
+CVn <- mean(CVn_j)
+
+CVn
+
+@
 
 \item Calculating LOOCV using leverage.
 
